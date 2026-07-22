@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="tr">
 <head>
@@ -12,7 +13,8 @@
     .hero { padding: 25px 6%; background: white; border-bottom: 1px solid #e5e7eb; }
     .wrap { padding: 25px 6%; }
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-top: 15px; }
-    .card { background: white; padding: 15px; border-radius: 10px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); font-weight: bold; font-size: 14px; }
+    .card { background: white; padding: 15px; border-radius: 10px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); font-weight: bold; font-size: 14px; cursor: pointer; transition: 0.2s; }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
     footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
     .chat-btn { position: fixed; bottom: 20px; right: 20px; background-color: #007bff; color: white; padding: 12px 18px; border-radius: 30px; font-size: 16px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 1000; }
     .chat-box { display: none; position: fixed; bottom: 75px; right: 20px; width: 320px; background: white; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); z-index: 1001; overflow: hidden; }
@@ -53,15 +55,26 @@
 
   <div id="chatBox" class="chat-box">
     <div class="chat-header">
-      <span>Canlı Destek</span>
+      <span id="chatTitle">Canlı Destek</span>
       <button onclick="toggleChat()">✕</button>
     </div>
-    <div class="chat-body" id="chatBody"></div>
-    <div class="chat-footer">
-      <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="sendImage(event)">
-      <label for="imageInput" title="Fotoğraf Gönder">📷</label>
-      <input type="text" id="chatInput" placeholder="Mesaj yazın..." onkeypress="if(event.key === 'Enter') sendMessage()" />
-      <button onclick="sendMessage()">Gönder</button>
+    
+    <!-- Kullanıcı Adı Giriş Ekranı -->
+    <div id="chatWelcome" style="padding: 25px; text-align: center;">
+      <p style="margin-top:0; font-size: 14px; color: #4b5563;">Sohbet başlatmak için adınızı yazın:</p>
+      <input type="text" id="usernameInput" placeholder="Adınız / Kullanıcı Adı" style="width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;">
+      <button onclick="startChat()" style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: bold;">Sohbeti Başlat</button>
+    </div>
+
+    <!-- Sohbet Alanı -->
+    <div id="chatMain" style="display: none;">
+      <div class="chat-body" id="chatBody"></div>
+      <div class="chat-footer">
+        <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="sendImage(event)">
+        <label for="imageInput" title="Fotoğraf Gönder">📷</label>
+        <input type="text" id="chatInput" placeholder="Mesaj yazın..." onkeypress="if(event.key === 'Enter') sendMessage()" />
+        <button onclick="sendMessage()">Gönder</button>
+      </div>
     </div>
   </div>
 
@@ -77,21 +90,77 @@
     ];
     const grid = document.getElementById("grid");
     cats.forEach(c => {
-      grid.innerHTML += `<div class="card"><span style="font-size:24px;">${c[0]}</span><br>${c[1]}</div>`;
+      grid.innerHTML += `<div class="card" onclick="openChatForCategory('${c[1]}')"><span style="font-size:24px;">${c[0]}</span><br>${c[1]}</div>`;
     });
+
+    let currentUsername = localStorage.getItem('hizmetbul_username') || '';
 
     function toggleChat() {
       const box = document.getElementById('chatBox');
-      box.style.display = (box.style.display === 'block') ? 'none' : 'block';
-      if(box.style.display === 'block') { loadChatMessages(); }
+      if (box.style.display === 'block') {
+        box.style.display = 'none';
+      } else {
+        box.style.display = 'block';
+        checkChatState();
+      }
+    }
+
+    function checkChatState() {
+      if (!currentUsername) {
+        document.getElementById('chatWelcome').style.display = 'block';
+        document.getElementById('chatMain').style.display = 'none';
+      } else {
+        document.getElementById('chatWelcome').style.display = 'none';
+        document.getElementById('chatMain').style.display = 'block';
+        loadChatMessages();
+      }
+    }
+
+    function startChat() {
+      const input = document.getElementById('usernameInput');
+      const name = input.value.trim();
+      if (!name) {
+        alert('Lütfen adınızı girin.');
+        return;
+      }
+      currentUsername = name;
+      localStorage.setItem('hizmetbul_username', name);
+      checkChatState();
+
+      if (window.pendingCategory) {
+        sendInitialMessage(window.pendingCategory);
+        window.pendingCategory = null;
+      }
+    }
+
+    function openChatForCategory(categoryName) {
+      const box = document.getElementById('chatBox');
+      box.style.display = 'block';
+
+      if (!currentUsername) {
+        window.pendingCategory = categoryName;
+        document.getElementById('chatWelcome').style.display = 'block';
+        document.getElementById('chatMain').style.display = 'none';
+      } else {
+        document.getElementById('chatWelcome').style.display = 'none';
+        document.getElementById('chatMain').style.display = 'block';
+        sendInitialMessage(categoryName);
+      }
+    }
+
+    function sendInitialMessage(categoryName) {
+      const msg = `Merhaba, ${categoryName} hizmeti hakkında bilgi almak istiyorum.`;
+      saveAndSendMessage(msg, null);
     }
 
     function loadChatMessages() {
       const chatBody = document.getElementById('chatBody');
-      chatBody.innerHTML = `<div style="text-align: left; margin-bottom: 8px;"><p class="msg" style="background: #e9ecef; color: #172033;">Merhaba! Nasıl yardımcı olabiliriz?</p></div>`;
+      chatBody.innerHTML = `<div style="text-align: left; margin-bottom: 8px;"><p class="msg" style="background: #e9ecef; color: #172033;">Merhaba ${currentUsername}! Nasıl yardımcı olabiliriz?</p></div>`;
       
       let messages = JSON.parse(localStorage.getItem('hizmetbul_mesajlar') || '[]');
-      messages.forEach(item => {
+      let userMessages = messages.filter(m => m.username === currentUsername);
+
+      userMessages.forEach(item => {
         let contentHtml = item.text ? `<div>${item.text}</div>` : '';
         if(item.image) {
           contentHtml += `<img src="${item.image}" style="max-width: 150px; border-radius: 6px; margin-top: 4px; display: block;">`;
@@ -118,14 +187,8 @@
       const input = document.getElementById('chatInput');
       const msg = input.value.trim();
       if (msg === '') return;
-
-      const timeStr = new Date().toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
       input.value = '';
-
-      let messages = JSON.parse(localStorage.getItem('hizmetbul_mesajlar') || '[]');
-      messages.push({ text: msg, image: null, time: timeStr, reply: "" });
-      localStorage.setItem('hizmetbul_mesajlar', JSON.stringify(messages));
-      loadChatMessages();
+      saveAndSendMessage(msg, null);
     }
 
     function sendImage(event) {
@@ -134,13 +197,26 @@
 
       const reader = new FileReader();
       reader.onload = function(e) {
-        const timeStr = new Date().toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
-        let messages = JSON.parse(localStorage.getItem('hizmetbul_mesajlar') || '[]');
-        messages.push({ text: "", image: e.target.result, time: timeStr, reply: "" });
-        localStorage.setItem('hizmetbul_mesajlar', JSON.stringify(messages));
-        loadChatMessages();
+        saveAndSendMessage("", e.target.result);
       };
       reader.readAsDataURL(file);
+    }
+
+    function saveAndSendMessage(text, image) {
+      const timeStr = new Date().toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
+      let messages = JSON.parse(localStorage.getItem('hizmetbul_mesajlar') || '[]');
+      
+      messages.push({
+        id: Date.now(),
+        username: currentUsername,
+        text: text,
+        image: image,
+        time: timeStr,
+        reply: ""
+      });
+      
+      localStorage.setItem('hizmetbul_mesajlar', JSON.stringify(messages));
+      loadChatMessages();
     }
   </script>
 
