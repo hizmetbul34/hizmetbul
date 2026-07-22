@@ -1,20 +1,72 @@
-<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>HizmetBul - Ozan Yönetim Paneli</title>
-<style>
-body{margin:0;font-family:Arial;background:#f5f7fb;color:#172033}.top{background:#111827;color:white;padding:18px 6%;display:flex;justify-content:space-between}.wrap{max-width:950px;margin:35px auto;padding:0 20px}.panel{background:white;padding:25px;border-radius:15px;margin-bottom:20px}.form{display:grid;gap:10px}.form input,.form select,.form textarea{padding:13px;border:1px solid #ddd;border-radius:8px}.btn{background:#2563eb;color:white;border:0;padding:12px;border-radius:8px;font-weight:bold;cursor:pointer}.danger{background:#dc2626}.login{max-width:400px;margin:80px auto}.hidden{display:none}.item{border:1px solid #ddd;padding:14px;border-radius:9px;margin:10px 0;display:flex;justify-content:space-between;align-items:center;gap:10px}
-</style></head><body><div class="top"><b>HizmetBul Yönetim Paneli — Ozan</b><a href="index.html" style="color:white">Siteye Dön</a></div>
-<div class="wrap">
-<section id="loginBox" class="panel login"><h2>Admin Girişi</h2><form id="loginForm" class="form"><input id="usernameInput" autocomplete="username" placeholder="Kullanıcı adı" required><input id="passwordInput" type="password" autocomplete="current-password" placeholder="Şifre" required><button class="btn" type="submit">Giriş Yap</button></form><p id="loginError" style="color:#dc2626"></p></section>
-<div id="app" class="hidden"><section class="panel"><h2>Hizmet Veren Ekle</h2><form id="providerForm" class="form"><input id="nameInput" required placeholder="İşletme / kişi adı"><input id="phoneInput" required placeholder="Telefon (905xxxxxxxxx)"><select id="categoryInput" required><option value="">Kategori seç</option></select><select id="districtInput" required><option value="">İlçe seç</option><option>Kadıköy</option><option>Üsküdar</option><option>Beykoz</option><option>Pendik</option><option>Maltepe</option></select><textarea id="descInput" placeholder="Hizmet açıklaması"></textarea><button class="btn" type="submit">Hizmet Veren Ekle</button></form><p id="addMessage"></p></section>
-<section class="panel"><h2>Kayıtlı Hizmet Verenler</h2><div id="list"></div></section>
-<section class="panel"><h2>Hesap Bilgileri</h2><p>Bu demo sürümünde giriş bilgileri kod içinde tanımlıdır.</p><b>Kullanıcı adı: ozan</b><br><b>Şifre: 123456</b></section></div></div>
-<script>
-const CATS=["Oto Çekici & Yol Yardım","Ev Temizliği","Klima Servisi","Özel Ders","Tadilat & Usta","Düğün & Organizasyon","Evden Eve Nakliye","Mezar Temizlik & Bakım","Parça Eşya Taşıma","Bahçe İşleri & Bakım","Kırım & Döküm İşleri"];
-const $=id=>document.getElementById(id);
-CATS.forEach(x=>$("categoryInput").add(new Option(x,x)));
-$("loginForm").addEventListener("submit",function(e){e.preventDefault();const u=$("usernameInput").value.trim(),p=$("passwordInput").value;if(u==="ozan"&&p==="123456"){$("loginBox").classList.add("hidden");$("app").classList.remove("hidden");showList()}else $("loginError").textContent="Kullanıcı adı veya şifre yanlış."});
-function get(){try{return JSON.parse(localStorage.getItem("hb_providers")||"[]")}catch(e){return[]}}
-function save(x){localStorage.setItem("hb_providers",JSON.stringify(x))}
-$("providerForm").addEventListener("submit",function(e){e.preventDefault();let a=get();a.push({id:Date.now(),name:$("nameInput").value,phone:$("phoneInput").value,category:$("categoryInput").value,district:$("districtInput").value,desc:$("descInput").value});save(a);this.reset();$("addMessage").textContent="Hizmet veren başarıyla eklendi.";showList()});
-function showList(){let a=get();$("list").innerHTML=a.length?a.map(p=>"<div class='item'><div><b>"+p.name+"</b><br>"+p.category+" — "+p.district+"<br>"+p.phone+"</div><button class='btn danger' onclick='removeProvider("+p.id+")'>Sil</button></div>").join(""):"Henüz kayıt yok."}
-function removeProvider(id){save(get().filter(p=>p.id!==id));showList()}
-</script></body></html>
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Yönetim Paneli</title>
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; background: #f5f7fb; color: #172033; }
+    header { background: #111827; color: white; padding: 18px 6%; display: flex; justify-content: space-between; align-items: center; }
+    header a { color: #a5b4fc; text-decoration: none; }
+    .wrap { padding: 25px 6%; max-width: 800px; margin: auto; }
+    .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; }
+    h2 { margin-top: 0; }
+    .msg-item { background: #f9fafb; border-left: 4px solid #007bff; padding: 12px; margin-bottom: 10px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
+    .btn-refresh { background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; margin-bottom: 15px; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <b class="logo">HizmetBul Yönetim Paneli</b>
+    <a href="index.html">Siteye Dön</a>
+  </header>
+
+  <main class="wrap">
+    
+    <!-- GELEN MESAJLAR KUTUSU -->
+    <div class="card">
+      <h2>📩 Gelen Canlı Destek Mesajları</h2>
+      <button class="btn-refresh" onclick="loadMessages()">🔄 Mesajları Yenile</button>
+      <ul id="msgList" style="list-style: none; padding: 0; margin: 0;">
+        <li>Yükleniyor...</li>
+      </ul>
+    </div>
+
+  </main>
+
+  <script>
+    function loadMessages() {
+      const list = document.getElementById('msgList');
+      list.innerHTML = '<li>Yükleniyor...</li>';
+
+      fetch('https://api.restful-api.dev/objects')
+        .then(res => res.json())
+        .then(data => {
+          const messages = data.filter(item => item.name === 'hizmetbul_mesajlar' && item.data);
+          
+          list.innerHTML = '';
+          if (messages.length === 0) {
+            list.innerHTML = '<li>Henüz gelen mesaj yok.</li>';
+            return;
+          }
+
+          messages.reverse().forEach(item => {
+            list.innerHTML += `
+              <li class="msg-item">
+                <span style="font-size: 15px;">${item.data.text}</span>
+                <span style="font-size: 12px; color: #6b7280; font-weight: bold;">🕒 ${item.data.time || ''}</span>
+              </li>
+            `;
+          });
+        })
+        .catch(() => {
+          list.innerHTML = '<li style="color:red;">Mesajlar yüklenirken hata oluştu.</li>';
+        });
+    }
+
+    loadMessages();
+  </script>
+
+</body>
+</html>
