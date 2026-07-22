@@ -1,4 +1,4 @@
-        <!doctype html>
+<!doctype html>
 <html lang="tr">
 <head>
   <meta charset="utf-8">
@@ -14,7 +14,10 @@
     input, select, textarea { width: 100%; padding: 10px; margin-bottom: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
     .btn { background: #2563eb; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; }
     .btn-refresh { background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; margin-bottom: 15px; }
-    .msg-item { background: #f9fafb; border-left: 4px solid #007bff; padding: 12px; margin-bottom: 10px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
+    .msg-item { background: #f9fafb; border: 1px solid #e5e7eb; padding: 15px; margin-bottom: 12px; border-radius: 8px; }
+    .reply-box { display: flex; gap: 8px; margin-top: 10px; }
+    .reply-box input { margin-bottom: 0; flex: 1; }
+    .reply-box button { background: #10b981; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: bold; }
     #adminPanel { display: none; }
   </style>
 </head>
@@ -29,8 +32,8 @@
   <div class="wrap" id="loginBox">
     <div class="card" style="max-width: 400px; margin: 50px auto; text-align: center;">
       <h2>Giriş Yap</h2>
-      <input type="text" id="username" placeholder="Kullanıcı adı (ozan)">
-      <input type="password" id="password" placeholder="Şifre (123456)">
+      <input type="text" id="username" placeholder="Kullanıcı adı">
+      <input type="password" id="password" placeholder="Şifre">
       <button class="btn" onclick="checkLogin()">Giriş Yap</button>
     </div>
   </div>
@@ -38,16 +41,12 @@
   <!-- YÖNETİM PANELİ -->
   <main class="wrap" id="adminPanel">
     
-    <!-- Gelen Mesajlar -->
     <div class="card">
       <h2>📩 Gelen Canlı Destek Mesajları</h2>
       <button class="btn-refresh" onclick="loadMessages()">🔄 Mesajları Yenile</button>
-      <ul id="msgList" style="list-style: none; padding: 0; margin: 0;">
-        <li>Yükleniyor...</li>
-      </ul>
+      <div id="msgList">Yükleniyor...</div>
     </div>
 
-    <!-- Hizmet Veren Ekle -->
     <div class="card">
       <h2>Hizmet Veren Ekle</h2>
       <input type="text" id="name" placeholder="İşletme / kişi adı">
@@ -91,22 +90,47 @@
 
     function loadMessages() {
       const list = document.getElementById('msgList');
-      const messages = JSON.parse(localStorage.getItem('hizmetbul_mesajlar') || '[]');
+      let messages = JSON.parse(localStorage.getItem('hizmetbul_mesajlar') || '[]');
       
       list.innerHTML = '';
       if (messages.length === 0) {
-        list.innerHTML = '<li>Henüz gelen mesaj yok.</li>';
+        list.innerHTML = '<p>Henüz gelen mesaj yok.</p>';
         return;
       }
 
-      messages.reverse().forEach(item => {
+      messages.forEach((item, index) => {
+        let replyHtml = item.reply ? `<p style="color: #059669; margin: 8px 0 0 0; font-size: 14px;"><b>Senin Cevabın:</b> ${item.reply}</p>` : '';
+        
         list.innerHTML += `
-          <li class="msg-item">
-            <span style="font-size: 15px;">${item.text}</span>
-            <span style="font-size: 12px; color: #6b7280; font-weight: bold;">🕒 ${item.time || ''}</span>
-          </li>
+          <div class="msg-item">
+            <div style="display:flex; justify-content:space-between; font-size:12px; color:#6b7280; margin-bottom:4px;">
+              <span>Müşteri Mesajı</span>
+              <span>🕒 ${item.time || ''}</span>
+            </div>
+            <div style="font-size: 15px; font-weight: bold; margin-bottom: 8px;">${item.text}</div>
+            ${replyHtml}
+            <div class="reply-box">
+              <input type="text" id="replyInput_${index}" placeholder="Cevap yaz...">
+              <button onclick="sendReply(${index})">Cevapla</button>
+            </div>
+          </div>
         `;
       });
+    }
+
+    function sendReply(index) {
+      const replyText = document.getElementById(`replyInput_${index}`).value.trim();
+      if(!replyText) {
+        alert('Lütfen bir cevap yazın.');
+        return;
+      }
+
+      let messages = JSON.parse(localStorage.getItem('hizmetbul_mesajlar') || '[]');
+      messages[index].reply = replyText;
+      localStorage.setItem('hizmetbul_mesajlar', JSON.stringify(messages));
+      
+      alert('Cevap gönderildi!');
+      loadMessages();
     }
 
     function addProvider() {
@@ -139,4 +163,5 @@
 
 </body>
 </html>
+
 
