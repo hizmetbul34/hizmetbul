@@ -6,17 +6,7 @@
   <title>HizmetBul</title>
   <style>
     body { margin: 0; font-family: Arial, sans-serif; background: #f5f7fb; color: #172033; }
-    
-    /* 1. Genel Duyuru Bandı Stili */
-    .announcement-bar {
-      background: #2563eb;
-      color: white;
-      text-align: center;
-      padding: 10px 15px;
-      font-size: 14px;
-      font-weight: 500;
-    }
-
+    .announcement-bar { background: #2563eb; color: white; text-align: center; padding: 10px 15px; font-size: 14px; font-weight: 500; }
     header { background: #111827; color: white; padding: 18px 6%; display: flex; justify-content: space-between; align-items: center; }
     header a { color: #a5b4fc; text-decoration: none; }
     .hero { padding: 25px 6%; background: white; border-bottom: 1px solid #e5e7eb; }
@@ -24,14 +14,10 @@
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-top: 15px; }
     .card { background: white; padding: 15px; border-radius: 10px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); font-weight: bold; font-size: 14px; }
     footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
-    
-    /* Canlı Destek Widget Stilleri */
     .chat-btn { position: fixed; bottom: 20px; right: 20px; background-color: #007bff; color: white; padding: 12px 18px; border-radius: 30px; font-size: 16px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 1000; }
     .chat-box { display: none; position: fixed; bottom: 75px; right: 20px; width: 300px; background: white; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); z-index: 1001; overflow: hidden; }
     .chat-header { background: #007bff; color: white; padding: 12px 15px; display: flex; justify-content: space-between; font-weight: bold; }
     .chat-header button { background: none; border: none; color: white; font-weight: bold; cursor: pointer; font-size: 16px; }
-    
-    /* 2. Chat Gövdesi (Otomatik kaydırma eklendi) */
     .chat-body { padding: 15px; height: 220px; font-size: 14px; background: #fafafa; overflow-y: auto; }
     .msg { padding: 8px 12px; border-radius: 8px; margin: 0; display: inline-block; max-width: 80%; word-wrap: break-word; }
     .chat-footer { display: flex; border-top: 1px solid #eee; padding: 8px; }
@@ -41,7 +27,6 @@
 </head>
 <body>
 
-  <!-- 1. Genel Duyuru Mesajı -->
   <div class="announcement-bar">
     📢 <strong>Duyuru:</strong> HizmetBul üzerinden 7/24 kesintisiz destek alabilirsiniz!
   </div>
@@ -63,7 +48,6 @@
 
   <footer>© 2026 HizmetBul</footer>
 
-  <!-- Canlı Destek Butonu ve Kutusu -->
   <div class="chat-btn" onclick="toggleChat()">💬 Sohbet Et</div>
 
   <div id="chatBox" class="chat-box">
@@ -103,7 +87,6 @@
       box.style.display = (box.style.display === 'block') ? 'none' : 'block';
     }
 
-    // 2 ve 3. Otomatik Yanıt ve Admin Paneli Kayıt Fonksiyonu
     function sendMessage() {
       const input = document.getElementById('chatInput');
       const msg = input.value.trim();
@@ -112,7 +95,6 @@
       if (msg !== '') {
         const timeStr = new Date().toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
 
-        // Kullanıcı mesajını ekrana yaz
         chatBody.innerHTML += `
           <div style="text-align: right; margin-bottom: 8px;">
             <p class="msg" style="background: #007bff; color: white;">${msg}</p>
@@ -121,7 +103,6 @@
         input.value = '';
         chatBody.scrollTop = chatBody.scrollHeight;
 
-        // 1.5 Saniye sonra Otomatik Yanıt Gönder
         setTimeout(() => {
           chatBody.innerHTML += `
             <div style="text-align: left; margin-bottom: 8px;">
@@ -133,7 +114,6 @@
           chatBody.scrollTop = chatBody.scrollHeight;
         }, 1500);
 
-        // Yönetim paneline (API) kaydet
         fetch('https://api.restful-api.dev/objects', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
