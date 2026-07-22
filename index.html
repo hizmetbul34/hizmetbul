@@ -15,14 +15,15 @@
     .card { background: white; padding: 15px; border-radius: 10px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); font-weight: bold; font-size: 14px; }
     footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
     .chat-btn { position: fixed; bottom: 20px; right: 20px; background-color: #007bff; color: white; padding: 12px 18px; border-radius: 30px; font-size: 16px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 1000; }
-    .chat-box { display: none; position: fixed; bottom: 75px; right: 20px; width: 300px; background: white; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); z-index: 1001; overflow: hidden; }
+    .chat-box { display: none; position: fixed; bottom: 75px; right: 20px; width: 320px; background: white; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); z-index: 1001; overflow: hidden; }
     .chat-header { background: #007bff; color: white; padding: 12px 15px; display: flex; justify-content: space-between; font-weight: bold; }
     .chat-header button { background: none; border: none; color: white; font-weight: bold; cursor: pointer; font-size: 16px; }
-    .chat-body { padding: 15px; height: 220px; font-size: 14px; background: #fafafa; overflow-y: auto; }
+    .chat-body { padding: 15px; height: 240px; font-size: 14px; background: #fafafa; overflow-y: auto; }
     .msg { padding: 8px 12px; border-radius: 8px; margin: 5px 0; display: inline-block; max-width: 80%; word-wrap: break-word; }
-    .chat-footer { display: flex; border-top: 1px solid #eee; padding: 8px; }
-    .chat-footer input { flex: 1; border: 1px solid #ddd; padding: 6px 10px; border-radius: 6px; outline: none; }
-    .chat-footer button { background: #007bff; color: white; border: none; padding: 6px 12px; margin-left: 5px; border-radius: 6px; cursor: pointer; }
+    .chat-footer { display: flex; border-top: 1px solid #eee; padding: 8px; gap: 5px; align-items: center; }
+    .chat-footer input[type="text"] { flex: 1; border: 1px solid #ddd; padding: 6px 10px; border-radius: 6px; outline: none; }
+    .chat-footer button { background: #007bff; color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; }
+    .chat-footer label { background: #6b7280; color: white; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 14px; }
   </style>
 </head>
 <body>
@@ -55,10 +56,10 @@
       <span>Canlı Destek</span>
       <button onclick="toggleChat()">✕</button>
     </div>
-    <div class="chat-body" id="chatBody">
-      <!-- Mesajlar buradan dinamik yüklenecek -->
-    </div>
+    <div class="chat-body" id="chatBody"></div>
     <div class="chat-footer">
+      <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="sendImage(event)">
+      <label for="imageInput" title="Fotoğraf Gönder">📷</label>
       <input type="text" id="chatInput" placeholder="Mesaj yazın..." onkeypress="if(event.key === 'Enter') sendMessage()" />
       <button onclick="sendMessage()">Gönder</button>
     </div>
@@ -75,7 +76,6 @@
       ["🏗️","İnşaat Kırım Döküm & Bahçe"]
     ];
     const grid = document.getElementById("grid");
-    
     cats.forEach(c => {
       grid.innerHTML += `<div class="card"><span style="font-size:24px;">${c[0]}</span><br>${c[1]}</div>`;
     });
@@ -83,9 +83,7 @@
     function toggleChat() {
       const box = document.getElementById('chatBox');
       box.style.display = (box.style.display === 'block') ? 'none' : 'block';
-      if(box.style.display === 'block') {
-        loadChatMessages();
-      }
+      if(box.style.display === 'block') { loadChatMessages(); }
     }
 
     function loadChatMessages() {
@@ -93,16 +91,18 @@
       chatBody.innerHTML = `<div style="text-align: left; margin-bottom: 8px;"><p class="msg" style="background: #e9ecef; color: #172033;">Merhaba! Nasıl yardımcı olabiliriz?</p></div>`;
       
       let messages = JSON.parse(localStorage.getItem('hizmetbul_mesajlar') || '[]');
-      
       messages.forEach(item => {
-        // Kullanıcının gönderdiği mesaj
+        let contentHtml = item.text ? `<div>${item.text}</div>` : '';
+        if(item.image) {
+          contentHtml += `<img src="${item.image}" style="max-width: 150px; border-radius: 6px; margin-top: 4px; display: block;">`;
+        }
+
         chatBody.innerHTML += `
           <div style="text-align: right; margin-bottom: 8px;">
-            <p class="msg" style="background: #007bff; color: white;">${item.text}</p>
+            <div class="msg" style="background: #007bff; color: white; text-align: left;">${contentHtml}</div>
           </div>
         `;
         
-        // Admin cevap verdiyse baloncuğa ekle
         if(item.reply && item.reply.trim() !== '') {
           chatBody.innerHTML += `
             <div style="text-align: left; margin-bottom: 8px;">
@@ -117,17 +117,30 @@
     function sendMessage() {
       const input = document.getElementById('chatInput');
       const msg = input.value.trim();
+      if (msg === '') return;
 
-      if (msg !== '') {
+      const timeStr = new Date().toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
+      input.value = '';
+
+      let messages = JSON.parse(localStorage.getItem('hizmetbul_mesajlar') || '[]');
+      messages.push({ text: msg, image: null, time: timeStr, reply: "" });
+      localStorage.setItem('hizmetbul_mesajlar', JSON.stringify(messages));
+      loadChatMessages();
+    }
+
+    function sendImage(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
         const timeStr = new Date().toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
-        input.value = '';
-
         let messages = JSON.parse(localStorage.getItem('hizmetbul_mesajlar') || '[]');
-        messages.push({ text: msg, time: timeStr, reply: "" });
+        messages.push({ text: "", image: e.target.result, time: timeStr, reply: "" });
         localStorage.setItem('hizmetbul_mesajlar', JSON.stringify(messages));
-
         loadChatMessages();
-      }
+      };
+      reader.readAsDataURL(file);
     }
   </script>
 
