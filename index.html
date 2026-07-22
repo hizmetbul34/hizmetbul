@@ -82,12 +82,15 @@
 
     function sendMessage() {
       const input = document.getElementById('chatInput');
-      if (input.value.trim() !== '') {
-        let messages = JSON.parse(localStorage.getItem('chatMessages') || '[]');
-        messages.push(input.value);
-        localStorage.setItem('chatMessages', JSON.stringify(messages));
-        alert('Mesajınız yönetim paneline gönderildi!');
-        input.value = '';
+      const msg = input.value.trim();
+      if (msg !== '') {
+        fetch('https://ntfy.sh/hizmetbul34_mesaj_kanali', {
+          method: 'POST',
+          body: msg
+        }).then(() => {
+          alert('Mesajınız yöneticiye iletildi!');
+          input.value = '';
+        });
       }
     }
   </script>
