@@ -114,14 +114,9 @@
           chatBody.scrollTop = chatBody.scrollHeight;
         }, 1500);
 
-        fetch('https://api.restful-api.dev/objects', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: "hizmetbul_mesajlar",
-            data: { text: msg, time: timeStr }
-          })
-        });
+        let messages = JSON.parse(localStorage.getItem('hizmetbul_mesajlar') || '[]');
+        messages.push({ text: msg, time: timeStr });
+        localStorage.setItem('hizmetbul_mesajlar', JSON.stringify(messages));
       }
     }
   </script>
