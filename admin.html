@@ -13,12 +13,12 @@
     h2 { margin-top: 0; font-size: 18px; }
     input, select, textarea { width: 100%; padding: 10px; margin-bottom: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
     .btn { background: #2563eb; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; }
-    .btn-refresh { background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; margin-bottom: 15px; }
-    .msg-item { background: #f9fafb; border: 1px solid #e5e7eb; padding: 15px; margin-bottom: 12px; border-radius: 8px; }
-    .reply-box { display: flex; gap: 8px; margin-top: 10px; }
+    .btn-refresh { background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; margin-bottom: 10px; }
+    .btn-danger { background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; margin-bottom: 15px; font-weight: bold; }
+    .btn-del { background: #fee2e2; color: #dc2626; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+    .reply-box { display: flex; gap: 8px; margin-top: 15px; }
     .reply-box input { margin-bottom: 0; flex: 1; }
-    .reply-box button { background: #10b981; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-    #adminPanel { display: none; }
+    .reply-box button { background: #10b981; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -28,23 +28,21 @@
     <a href="index.html">Siteye Dön</a>
   </header>
 
-  <!-- GİRİŞ EKRANI -->
-  <div class="wrap" id="loginBox">
-    <div class="card" style="max-width: 400px; margin: 50px auto; text-align: center;">
-      <h2>Giriş Yap</h2>
-      <input type="text" id="username" placeholder="Kullanıcı adı">
-      <input type="password" id="password" placeholder="Şifre">
-      <button class="btn" onclick="checkLogin()">Giriş Yap</button>
-    </div>
-  </div>
-
-  <!-- YÖNETİM PANELİ -->
-  <main class="wrap" id="adminPanel">
+  <main class="wrap">
     
     <div class="card">
-      <h2>📩 Gelen Canlı Destek Mesajları</h2>
-      <button class="btn-refresh" onclick="loadMessages()">🔄 Mesajları Yenile</button>
-      <div id="msgList">Yükleniyor...</div>
+      <h2>📩 Canlı Destek Sohbetleri</h2>
+      <button class="btn-refresh" onclick="loadMessages()">🔄 Sohbeti Yenile</button>
+      <button class="btn-danger" onclick="clearAllChat()">🗑️ Tüm Sohbetleri Temizle</button>
+      
+      <div id="chatThread" style="background: #fafafa; border: 1px solid #eee; border-radius: 8px; padding: 15px; max-height: 400px; overflow-y: auto; margin-bottom: 15px;">
+        Yükleniyor...
+      </div>
+
+      <div class="reply-box">
+        <input type="text" id="adminReplyInput" placeholder="En son mesaja yanıt yaz..." onkeypress="if(event.key === 'Enter') sendAdminReply()">
+        <button onclick="sendAdminReply()">Yanıtla</button>
+      </div>
     </div>
 
     <div class="card">
@@ -75,62 +73,71 @@
   </main>
 
   <script>
-    function checkLogin() {
-      const u = document.getElementById('username').value;
-      const p = document.getElementById('password').value;
-
-      if(u === 'ozan' && p === '123456') {
-        document.getElementById('loginBox').style.display = 'none';
-        document.getElementById('adminPanel').style.display = 'block';
-        loadMessages();
-      } else {
-        alert('Kullanıcı adı veya şifre hatalı!');
-      }
-    }
-
     function loadMessages() {
-      const list = document.getElementById('msgList');
+      const thread = document.getElementById('chatThread');
       let messages = JSON.parse(localStorage.getItem('hizmetbul_mesajlar') || '[]');
       
-      list.innerHTML = '';
+      thread.innerHTML = '';
       if (messages.length === 0) {
-        list.innerHTML = '<p>Henüz gelen mesaj yok.</p>';
+        thread.innerHTML = '<p style="color: #6b7280; text-align: center;">Henüz mesaj yok.</p>';
         return;
       }
 
-      messages.forEach((item, index) => {
-        let replyHtml = item.reply ? `<p style="color: #059669; margin: 8px 0 0 0; font-size: 14px;"><b>Senin Cevabın:</b> ${item.reply}</p>` : '';
-        
-        list.innerHTML += `
-          <div class="msg-item">
-            <div style="display:flex; justify-content:space-between; font-size:12px; color:#6b7280; margin-bottom:4px;">
-              <span>Müşteri Mesajı</span>
-              <span>🕒 ${item.time || ''}</span>
+      messages.forEach(item => {
+        let contentHtml = item.text ? `<div>${item.text}</div>` : '';
+        if(item.image) {
+          contentHtml += `<img src="${item.image}" style="max-width: 150px; border-radius: 6px; margin-top: 4px; display: block;">`;
+        }
+
+        thread.innerHTML += `
+          <div style="margin-bottom: 12px; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <span style="font-size: 12px; font-weight: bold; color: #2563eb;">👤 ${item.username || 'Misafir'} (${item.time || ''})</span>
+              <button class="btn-del" onclick="deleteMessage(${item.id})">Sil</button>
             </div>
-            <div style="font-size: 15px; font-weight: bold; margin-bottom: 8px;">${item.text}</div>
-            ${replyHtml}
-            <div class="reply-box">
-              <input type="text" id="replyInput_${index}" placeholder="Cevap yaz...">
-              <button onclick="sendReply(${index})">Cevapla</button>
+            <div style="background: #e5e7eb; display: inline-block; padding: 8px 12px; border-radius: 8px; text-align: left; max-width: 90%;">
+              ${contentHtml}
             </div>
+            ${item.reply ? `
+              <div style="margin-top: 6px; text-align: left;">
+                <span style="font-size: 11px; font-weight: bold; color: #10b981;">Sen (Admin):</span>
+                <div style="background: #10b981; color: white; display: inline-block; padding: 6px 10px; border-radius: 8px; font-size: 14px;">${item.reply}</div>
+              </div>` : ''}
           </div>
         `;
       });
+      thread.scrollTop = thread.scrollHeight;
     }
 
-    function sendReply(index) {
-      const replyText = document.getElementById(`replyInput_${index}`).value.trim();
-      if(!replyText) {
-        alert('Lütfen bir cevap yazın.');
+    function sendAdminReply() {
+      const input = document.getElementById('adminReplyInput');
+      const text = input.value.trim();
+      if(!text) return;
+
+      let messages = JSON.parse(localStorage.getItem('hizmetbul_mesajlar') || '[]');
+      if(messages.length === 0) {
+        alert('Cevaplanacak mesaj yok.');
         return;
       }
 
-      let messages = JSON.parse(localStorage.getItem('hizmetbul_mesajlar') || '[]');
-      messages[index].reply = replyText;
+      messages[messages.length - 1].reply = text;
       localStorage.setItem('hizmetbul_mesajlar', JSON.stringify(messages));
-      
-      alert('Cevap gönderildi!');
+      input.value = '';
       loadMessages();
+    }
+
+    function deleteMessage(id) {
+      let messages = JSON.parse(localStorage.getItem('hizmetbul_mesajlar') || '[]');
+      messages = messages.filter(m => m.id !== id);
+      localStorage.setItem('hizmetbul_mesajlar', JSON.stringify(messages));
+      loadMessages();
+    }
+
+    function clearAllChat() {
+      if(confirm('Tüm sohbet geçmişini silmek istediğine emin misin?')) {
+        localStorage.removeItem('hizmetbul_mesajlar');
+        loadMessages();
+      }
     }
 
     function addProvider() {
@@ -159,9 +166,9 @@
         document.getElementById('desc').value = '';
       });
     }
+
+    loadMessages();
   </script>
 
 </body>
 </html>
-
-
