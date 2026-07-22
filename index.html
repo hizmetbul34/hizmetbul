@@ -1,12 +1,56 @@
-<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>HizmetBul</title>
-<style>
-body{margin:0;font-family:Arial;background:#f5f7fb;color:#172033}header{background:#111827;color:white;padding:18px 6%;display:flex;justify-content:space-between;align-items:center}.logo{font-size:24px;font-weight:800}a{color:inherit;text-decoration:none}.hero{background:#111827;color:white;text-align:center;padding:55px 20px}.hero h1{font-size:40px}.search{max-width:800px;margin:25px auto;display:flex;gap:10px}.search input,.search select,.search button{padding:14px;border-radius:9px;border:0}.search input{flex:1}.search button{background:#2563eb;color:white;font-weight:bold}.wrap{max-width:1100px;margin:40px auto;padding:0 20px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}.card{background:white;padding:22px;border-radius:15px;border:1px solid #e5e7eb}.icon{font-size:32px}.provider{background:#f8fafc;padding:12px;border-radius:9px;margin-top:10px}.wa{display:inline-block;background:#16a34a;color:white;padding:8px;border-radius:7px;margin-top:7px}footer{margin-top:50px;background:#111827;color:#cbd5e1;padding:30px;text-align:center}@media(max-width:650px){.search{flex-direction:column}.hero h1{font-size:30px}}
-</style></head><body>
-<header><b class="logo">HizmetBul</b><a href="admin.html">Yönetim Paneli</a></header>
-<section class="hero"><h1>İhtiyacın Olan Hizmeti Tek Yerde Bul</h1><p>Hizmet verenleri kategori ve ilçeye göre bul.</p><div class="search"><input id="q" placeholder="Hizmet ara"><select id="district"><option value="">Tüm ilçeler</option><option>Kadıköy</option><option>Üsküdar</option><option>Beykoz</option><option>Pendik</option><option>Maltepe</option></select><button onclick="render()">Ara</button></div></section>
-<main class="wrap"><h2>Hizmet Kategorileri</h2><div class="grid" id="grid"></div></main><footer>© 2026 HizmetBul</footer>
-<script>
-const cats=[["🚗","Oto Çekici & Yol Yardım"],["🧹","Ev Temizliği"],["❄️","Klima Servisi"],["📚","Özel Ders"],["🔧","Tadilat & Usta"],["🎉","Düğün & Organizasyon"],["🚛","Evden Eve Nakliye"],["🪦","Mezar Temizlik & Bakım"],["📦","Parça Eşya Taşıma"],["🌳","Bahçe İşleri & Bakım"],["🧱","Kırım & Döküm İşleri"]];
-function get(){try{return JSON.parse(localStorage.getItem("hb_providers")||"[]")}catch(e){return[]}}
-function render(){let q=document.getElementById("q").value.toLowerCase(),d=document.getElementById("district").value,ps=get(),g=document.getElementById("grid");g.innerHTML="";cats.forEach(c=>{let arr=ps.filter(p=>p.category===c[1]&&(!d||p.district===d)&&(!q||c[1].toLowerCase().includes(q)));let el=document.createElement("div");el.className="card";el.innerHTML="<div class='icon'>"+c[0]+"</div><h3>"+c[1]+"</h3>"+(arr.length?arr.map(p=>"<div class='provider'><b>"+p.name+"</b><br>"+p.district+"<br>"+(p.desc||"")+"<br><a class='wa' href='https://wa.me/"+p.phone.replace(/\D/g,"")+"' target='_blank'>WhatsApp</a></div>").join(""):"<p>Henüz hizmet veren eklenmemiş.</p>");g.appendChild(el)})}render();
-</script></body></html>
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body { margin: 0; font-family: Arial; background: #f5f7fb; color: #172033; }
+    header { background: #111827; color: white; padding: 18px 6%; display: flex; justify-content: space-between; align-items: center; }
+    
+    .chat-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: #007bff;
+      color: white;
+      padding: 12px 18px;
+      border-radius: 30px;
+      font-size: 16px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <b class="logo">HizmetBul</b>
+    <a href="admin.html">Yönetim Paneli</a>
+  </header>
+
+  <section class="hero">
+    <h1>İhtiyacın Olan Hizmeti Tek Yerde Bul</h1>
+    <p>Hizmet verenleri kategori ve ilçeye göre bul.</p>
+  </section>
+
+  <main class="wrap">
+    <h2>Hizmet Kategorileri</h2>
+    <div class="grid" id="grid"></div>
+  </main>
+
+  <footer>© 2026 HizmetBul</footer>
+
+  <!-- Sohbet Balonu -->
+  <div class="chat-btn" onclick="alert('Sohbet penceresi açılıyor...')">
+    💬 Sohbet Et
+  </div>
+
+  <script>
+    const cats = [["🚗","Oto Çekici & Yol Yardım"],["🧹","Ev Temizliği"],["❄️","Klima Servisi"],["📚","Özel Ders"],["🛠️","Tadilat"]];
+    function get(){ try{ return JSON.parse(localStorage.getItem("hb_providers")||"[]") }catch(e){ return[] } }
+    function render(){ let q=document.getElementById("q").value.toLowerCase(), d=document.getElementById("district").value.toLowerCase(); }
+  </script>
+
+</body>
+</html>
