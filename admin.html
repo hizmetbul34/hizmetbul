@@ -16,9 +16,10 @@
     .btn-refresh { background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; margin-bottom: 10px; }
     .btn-danger { background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; margin-bottom: 15px; font-weight: bold; }
     .btn-del { background: #fee2e2; color: #dc2626; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; }
-    .reply-box { display: flex; gap: 8px; margin-top: 15px; }
+    .reply-box { display: flex; gap: 8px; margin-top: 15px; align-items: center; }
     .reply-box input { margin-bottom: 0; flex: 1; }
-    .reply-box button { background: #10b981; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    .reply-box button { background: #10b981; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; height: 40px; }
+    .reply-box label { background: #6b7280; color: white; padding: 10px 12px; border-radius: 6px; cursor: pointer; font-size: 14px; height: 40px; box-sizing: border-box; display: flex; align-items: center; }
     #adminPanel { display: none; }
   </style>
 </head>
@@ -43,7 +44,7 @@
   <main class="wrap" id="adminPanel">
     
     <div class="card">
-      <h2>📩 Canlı Destek Sohbetleri</h2>
+      <h2>📩 Canlı Destek Sohbetleri (Canlı Bildirim Aktif 🔔)</h2>
       <button class="btn-refresh" onclick="loadMessages()">🔄 Sohbeti Yenile</button>
       <button class="btn-danger" onclick="clearAllChat()">🗑️ Tüm Sohbetleri Temizle</button>
       
@@ -52,39 +53,18 @@
       </div>
 
       <div class="reply-box">
+        <input type="file" id="adminImageInput" accept="image/*" style="display:none" onchange="sendAdminImage(event)">
+        <label for="adminImageInput" title="Fotoğraf Gönder">📷</label>
         <input type="text" id="adminReplyInput" placeholder="En son mesaja yanıt yaz..." onkeypress="if(event.key === 'Enter') sendAdminReply()">
         <button onclick="sendAdminReply()">Yanıtla</button>
       </div>
     </div>
 
-    <div class="card">
-      <h2>Hizmet Veren Ekle</h2>
-      <input type="text" id="name" placeholder="İşletme / kişi adı">
-      <input type="text" id="phone" placeholder="Telefon (905XXXXXXXXX)">
-      <select id="category">
-        <option value="">Kategori seç</option>
-        <option>Oto Çekici & Yol Yardım</option>
-        <option>Ev Temizliği</option>
-        <option>Klima Servisi</option>
-        <option>Özel Ders</option>
-        <option>Tadilat</option>
-        <option>Mezar Bakım & Temizlik</option>
-        <option>İnşaat Kırım Döküm & Bahçe</option>
-      </select>
-      <select id="district">
-        <option value="">İlçe seç</option>
-        <option>Beykoz</option>
-        <option>Kadıköy</option>
-        <option>Beşiktaş</option>
-        <option>Üsküdar</option>
-      </select>
-      <textarea id="desc" placeholder="Hizmet açıklaması" rows="3"></textarea>
-      <button class="btn" onclick="addProvider()">Hizmet Veren Ekle</button>
-    </div>
-
   </main>
 
   <script>
+    let lastMessageCount = 0;
+
     function checkLogin() {
       const u = document.getElementById('username').value;
       const p = document.getElementById('password').value;
@@ -93,14 +73,45 @@
         document.getElementById('loginBox').style.display = 'none';
         document.getElementById('adminPanel').style.display = 'block';
         loadMessages();
+        // Her 3 saniyede bir yeni mesaj var mı diye kontrol et ve ses çal
+        setInterval(checkForNewMessages, 3000);
       } else {
         alert('Kullanıcı adı veya şifre hatalı!');
+      }
+    }
+
+    function playNotificationSound() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5 nota
+        gain.gain.setValueAtTime(0.1, ctx.currentTime);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.2);
+      } catch (e) {
+        console.log('Ses çalınamadı');
+      }
+    }
+
+    function checkForNewMessages() {
+      let messages = JSON.parse(localStorage.getItem('hizmetbul_mesajlar') || '[]');
+      if (messages.length > lastMessageCount) {
+        if (lastMessageCount !== 0) {
+          playNotificationSound();
+        }
+        lastMessageCount = messages.length;
+        loadMessages();
       }
     }
 
     function loadMessages() {
       const thread = document.getElementById('chatThread');
       let messages = JSON.parse(localStorage.getItem('hizmetbul_mesajlar') || '[]');
+      lastMessageCount = messages.length;
       
       thread.innerHTML = '';
       if (messages.length === 0) {
@@ -151,6 +162,26 @@
       loadMessages();
     }
 
+    function sendAdminImage(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      let messages = JSON.parse(localStorage.getItem('hizmetbul_mesajlar') || '[]');
+      if(messages.length === 0) {
+        alert('Fotoğraf gönderecek aktif sohbet yok.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        messages[messages.length - 1].reply = `📷 [Fotoğraf gönderildi]`;
+        // İsterseniz yanıt alanına da resim eklenebilir veya ayrı tutulabilir
+        localStorage.setItem('hizmetbul_mesajlar', JSON.stringify(messages));
+        loadMessages();
+      };
+      reader.readAsDataURL(file);
+    }
+
     function deleteMessage(id) {
       let messages = JSON.parse(localStorage.getItem('hizmetbul_mesajlar') || '[]');
       messages = messages.filter(m => m.id !== id);
@@ -164,35 +195,7 @@
         loadMessages();
       }
     }
-
-    function addProvider() {
-      const name = document.getElementById('name').value;
-      const phone = document.getElementById('phone').value;
-      const category = document.getElementById('category').value;
-      const district = document.getElementById('district').value;
-      const desc = document.getElementById('desc').value;
-
-      if(!name) {
-        alert('Lütfen işletme adı girin.');
-        return;
-      }
-
-      fetch('https://api.restful-api.dev/objects', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: "hizmetbul34_isletme",
-          data: { name, phone, category, district, desc }
-        })
-      }).then(() => {
-        alert('Hizmet veren eklendi!');
-        document.getElementById('name').value = '';
-        document.getElementById('phone').value = '';
-        document.getElementById('desc').value = '';
-      });
-    }
   </script>
 
 </body>
 </html>
-
