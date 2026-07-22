@@ -1,4 +1,4 @@
-<!doctype html>
+        <!doctype html>
 <html lang="tr">
 <head>
   <meta charset="utf-8">
@@ -91,31 +91,22 @@
 
     function loadMessages() {
       const list = document.getElementById('msgList');
-      list.innerHTML = '<li>Yükleniyor...</li>';
+      const messages = JSON.parse(localStorage.getItem('hizmetbul_mesajlar') || '[]');
+      
+      list.innerHTML = '';
+      if (messages.length === 0) {
+        list.innerHTML = '<li>Henüz gelen mesaj yok.</li>';
+        return;
+      }
 
-      fetch('https://api.restful-api.dev/objects')
-        .then(res => res.json())
-        .then(data => {
-          const messages = data.filter(item => item.name === 'hizmetbul_mesajlar' && item.data);
-          
-          list.innerHTML = '';
-          if (messages.length === 0) {
-            list.innerHTML = '<li>Henüz gelen mesaj yok.</li>';
-            return;
-          }
-
-          messages.reverse().forEach(item => {
-            list.innerHTML += `
-              <li class="msg-item">
-                <span style="font-size: 15px;">${item.data.text}</span>
-                <span style="font-size: 12px; color: #6b7280; font-weight: bold;">🕒 ${item.data.time || ''}</span>
-              </li>
-            `;
-          });
-        })
-        .catch(() => {
-          list.innerHTML = '<li style="color:red;">Mesajlar yüklenirken hata oluştu.</li>';
-        });
+      messages.reverse().forEach(item => {
+        list.innerHTML += `
+          <li class="msg-item">
+            <span style="font-size: 15px;">${item.text}</span>
+            <span style="font-size: 12px; color: #6b7280; font-weight: bold;">🕒 ${item.time || ''}</span>
+          </li>
+        `;
+      });
     }
 
     function addProvider() {
@@ -148,3 +139,4 @@
 
 </body>
 </html>
+
