@@ -15,6 +15,7 @@
     .btn { background: #2563eb; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; }
     .btn-refresh { background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; margin-bottom: 15px; }
     .msg-item { background: #f9fafb; border-left: 4px solid #007bff; padding: 12px; margin-bottom: 10px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
+    #adminPanel { display: none; }
   </style>
 </head>
 <body>
@@ -24,9 +25,20 @@
     <a href="index.html">Siteye Dön</a>
   </header>
 
-  <main class="wrap">
+  <!-- GİRİŞ EKRANI -->
+  <div class="wrap" id="loginBox">
+    <div class="card" style="max-width: 400px; margin: 50px auto; text-align: center;">
+      <h2>Giriş Yap</h2>
+      <input type="text" id="username" placeholder="Kullanıcı adı (ozan)">
+      <input type="password" id="password" placeholder="Şifre (123456)">
+      <button class="btn" onclick="checkLogin()">Giriş Yap</button>
+    </div>
+  </div>
+
+  <!-- YÖNETİM PANELİ -->
+  <main class="wrap" id="adminPanel">
     
-    <!-- 1. Gelen Canlı Destek Mesajları -->
+    <!-- Gelen Mesajlar -->
     <div class="card">
       <h2>📩 Gelen Canlı Destek Mesajları</h2>
       <button class="btn-refresh" onclick="loadMessages()">🔄 Mesajları Yenile</button>
@@ -35,7 +47,7 @@
       </ul>
     </div>
 
-    <!-- 2. Hizmet Veren Ekle Paneli -->
+    <!-- Hizmet Veren Ekle -->
     <div class="card">
       <h2>Hizmet Veren Ekle</h2>
       <input type="text" id="name" placeholder="İşletme / kişi adı">
@@ -64,6 +76,19 @@
   </main>
 
   <script>
+    function checkLogin() {
+      const u = document.getElementById('username').value;
+      const p = document.getElementById('password').value;
+
+      if(u === 'ozan' && p === '123456') {
+        document.getElementById('loginBox').style.display = 'none';
+        document.getElementById('adminPanel').style.display = 'block';
+        loadMessages();
+      } else {
+        alert('Kullanıcı adı veya şifre hatalı!');
+      }
+    }
+
     function loadMessages() {
       const list = document.getElementById('msgList');
       list.innerHTML = '<li>Yükleniyor...</li>';
@@ -119,8 +144,6 @@
         document.getElementById('desc').value = '';
       });
     }
-
-    loadMessages();
   </script>
 
 </body>
