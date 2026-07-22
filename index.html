@@ -84,9 +84,15 @@
       const input = document.getElementById('chatInput');
       const msg = input.value.trim();
       if (msg !== '') {
-        fetch('https://ntfy.sh/hizmetbul34_mesaj_kanali', {
+        const timeStr = new Date().toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
+        
+        fetch('https://api.restful-api.dev/objects', {
           method: 'POST',
-          body: msg
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: "hizmetbul34_mesaj",
+            data: { text: msg, time: timeStr }
+          })
         }).then(() => {
           alert('Mesajınız yöneticiye iletildi!');
           input.value = '';
