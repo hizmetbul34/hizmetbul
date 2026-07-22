@@ -19,6 +19,7 @@
     .reply-box { display: flex; gap: 8px; margin-top: 15px; }
     .reply-box input { margin-bottom: 0; flex: 1; }
     .reply-box button { background: #10b981; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    #adminPanel { display: none; }
   </style>
 </head>
 <body>
@@ -28,7 +29,18 @@
     <a href="index.html">Siteye Dön</a>
   </header>
 
-  <main class="wrap">
+  <!-- GİRİŞ EKRANI -->
+  <div class="wrap" id="loginBox">
+    <div class="card" style="max-width: 400px; margin: 50px auto; text-align: center;">
+      <h2>Giriş Yap</h2>
+      <input type="text" id="username" placeholder="Kullanıcı adı">
+      <input type="password" id="password" placeholder="Şifre">
+      <button class="btn" onclick="checkLogin()">Giriş Yap</button>
+    </div>
+  </div>
+
+  <!-- YÖNETİM PANELİ -->
+  <main class="wrap" id="adminPanel">
     
     <div class="card">
       <h2>📩 Canlı Destek Sohbetleri</h2>
@@ -73,6 +85,19 @@
   </main>
 
   <script>
+    function checkLogin() {
+      const u = document.getElementById('username').value;
+      const p = document.getElementById('password').value;
+
+      if(u === 'ozan' && p === '123456') {
+        document.getElementById('loginBox').style.display = 'none';
+        document.getElementById('adminPanel').style.display = 'block';
+        loadMessages();
+      } else {
+        alert('Kullanıcı adı veya şifre hatalı!');
+      }
+    }
+
     function loadMessages() {
       const thread = document.getElementById('chatThread');
       let messages = JSON.parse(localStorage.getItem('hizmetbul_mesajlar') || '[]');
@@ -166,9 +191,8 @@
         document.getElementById('desc').value = '';
       });
     }
-
-    loadMessages();
   </script>
 
 </body>
 </html>
+
