@@ -10,27 +10,55 @@
     header a { color: #a5b4fc; text-decoration: none; }
     .wrap { padding: 25px 6%; max-width: 800px; margin: auto; }
     .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; }
-    h2 { margin-top: 0; }
-    .msg-item { background: #f9fafb; border-left: 4px solid #007bff; padding: 12px; margin-bottom: 10px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
+    h2 { margin-top: 0; font-size: 18px; }
+    input, select, textarea { width: 100%; padding: 10px; margin-bottom: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+    .btn { background: #2563eb; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; }
     .btn-refresh { background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; margin-bottom: 15px; }
+    .msg-item { background: #f9fafb; border-left: 4px solid #007bff; padding: 12px; margin-bottom: 10px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
   </style>
 </head>
 <body>
 
   <header>
-    <b class="logo">HizmetBul Yönetim Paneli</b>
+    <b>HizmetBul Yönetim Paneli</b>
     <a href="index.html">Siteye Dön</a>
   </header>
 
   <main class="wrap">
     
-    <!-- GELEN MESAJLAR KUTUSU -->
+    <!-- 1. Gelen Canlı Destek Mesajları -->
     <div class="card">
       <h2>📩 Gelen Canlı Destek Mesajları</h2>
       <button class="btn-refresh" onclick="loadMessages()">🔄 Mesajları Yenile</button>
       <ul id="msgList" style="list-style: none; padding: 0; margin: 0;">
         <li>Yükleniyor...</li>
       </ul>
+    </div>
+
+    <!-- 2. Hizmet Veren Ekle Paneli -->
+    <div class="card">
+      <h2>Hizmet Veren Ekle</h2>
+      <input type="text" id="name" placeholder="İşletme / kişi adı">
+      <input type="text" id="phone" placeholder="Telefon (905XXXXXXXXX)">
+      <select id="category">
+        <option value="">Kategori seç</option>
+        <option>Oto Çekici & Yol Yardım</option>
+        <option>Ev Temizliği</option>
+        <option>Klima Servisi</option>
+        <option>Özel Ders</option>
+        <option>Tadilat</option>
+        <option>Mezar Bakım & Temizlik</option>
+        <option>İnşaat Kırım Döküm & Bahçe</option>
+      </select>
+      <select id="district">
+        <option value="">İlçe seç</option>
+        <option>Beykoz</option>
+        <option>Kadıköy</option>
+        <option>Beşiktaş</option>
+        <option>Üsküdar</option>
+      </select>
+      <textarea id="desc" placeholder="Hizmet açıklaması" rows="3"></textarea>
+      <button class="btn" onclick="addProvider()">Hizmet Veren Ekle</button>
     </div>
 
   </main>
@@ -63,6 +91,33 @@
         .catch(() => {
           list.innerHTML = '<li style="color:red;">Mesajlar yüklenirken hata oluştu.</li>';
         });
+    }
+
+    function addProvider() {
+      const name = document.getElementById('name').value;
+      const phone = document.getElementById('phone').value;
+      const category = document.getElementById('category').value;
+      const district = document.getElementById('district').value;
+      const desc = document.getElementById('desc').value;
+
+      if(!name) {
+        alert('Lütfen işletme adı girin.');
+        return;
+      }
+
+      fetch('https://api.restful-api.dev/objects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: "hizmetbul34_isletme",
+          data: { name, phone, category, district, desc }
+        })
+      }).then(() => {
+        alert('Hizmet veren eklendi!');
+        document.getElementById('name').value = '';
+        document.getElementById('phone').value = '';
+        document.getElementById('desc').value = '';
+      });
     }
 
     loadMessages();
