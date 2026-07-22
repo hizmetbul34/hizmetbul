@@ -19,7 +19,7 @@
     .chat-header { background: #007bff; color: white; padding: 12px 15px; display: flex; justify-content: space-between; font-weight: bold; }
     .chat-header button { background: none; border: none; color: white; font-weight: bold; cursor: pointer; font-size: 16px; }
     .chat-body { padding: 15px; height: 220px; font-size: 14px; background: #fafafa; overflow-y: auto; }
-    .msg { padding: 8px 12px; border-radius: 8px; margin: 0; display: inline-block; max-width: 80%; word-wrap: break-word; }
+    .msg { padding: 8px 12px; border-radius: 8px; margin: 5px 0; display: inline-block; max-width: 80%; word-wrap: break-word; }
     .chat-footer { display: flex; border-top: 1px solid #eee; padding: 8px; }
     .chat-footer input { flex: 1; border: 1px solid #ddd; padding: 6px 10px; border-radius: 6px; outline: none; }
     .chat-footer button { background: #007bff; color: white; border: none; padding: 6px 12px; margin-left: 5px; border-radius: 6px; cursor: pointer; }
@@ -56,9 +56,7 @@
       <button onclick="toggleChat()">✕</button>
     </div>
     <div class="chat-body" id="chatBody">
-      <div style="text-align: left; margin-bottom: 8px;">
-        <p class="msg" style="background: #e9ecef; color: #172033;">Merhaba! Nasıl yardımcı olabiliriz?</p>
-      </div>
+      <!-- Mesajlar buradan dinamik yüklenecek -->
     </div>
     <div class="chat-footer">
       <input type="text" id="chatInput" placeholder="Mesaj yazın..." onkeypress="if(event.key === 'Enter') sendMessage()" />
@@ -85,38 +83,50 @@
     function toggleChat() {
       const box = document.getElementById('chatBox');
       box.style.display = (box.style.display === 'block') ? 'none' : 'block';
+      if(box.style.display === 'block') {
+        loadChatMessages();
+      }
+    }
+
+    function loadChatMessages() {
+      const chatBody = document.getElementById('chatBody');
+      chatBody.innerHTML = `<div style="text-align: left; margin-bottom: 8px;"><p class="msg" style="background: #e9ecef; color: #172033;">Merhaba! Nasıl yardımcı olabiliriz?</p></div>`;
+      
+      let messages = JSON.parse(localStorage.getItem('hizmetbul_mesajlar') || '[]');
+      
+      messages.forEach(item => {
+        // Kullanıcının gönderdiği mesaj
+        chatBody.innerHTML += `
+          <div style="text-align: right; margin-bottom: 8px;">
+            <p class="msg" style="background: #007bff; color: white;">${item.text}</p>
+          </div>
+        `;
+        
+        // Admin cevap verdiyse baloncuğa ekle
+        if(item.reply && item.reply.trim() !== '') {
+          chatBody.innerHTML += `
+            <div style="text-align: left; margin-bottom: 8px;">
+              <p class="msg" style="background: #10b981; color: white;">🤖 ${item.reply}</p>
+            </div>
+          `;
+        }
+      });
+      chatBody.scrollTop = chatBody.scrollHeight;
     }
 
     function sendMessage() {
       const input = document.getElementById('chatInput');
       const msg = input.value.trim();
-      const chatBody = document.getElementById('chatBody');
 
       if (msg !== '') {
         const timeStr = new Date().toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
-
-        chatBody.innerHTML += `
-          <div style="text-align: right; margin-bottom: 8px;">
-            <p class="msg" style="background: #007bff; color: white;">${msg}</p>
-          </div>
-        `;
         input.value = '';
-        chatBody.scrollTop = chatBody.scrollHeight;
-
-        setTimeout(() => {
-          chatBody.innerHTML += `
-            <div style="text-align: left; margin-bottom: 8px;">
-              <p class="msg" style="background: #e9ecef; color: #172033;">
-                🤖 Mesajınızı aldık! En kısa sürede size dönüş yapacağız.
-              </p>
-            </div>
-          `;
-          chatBody.scrollTop = chatBody.scrollHeight;
-        }, 1500);
 
         let messages = JSON.parse(localStorage.getItem('hizmetbul_mesajlar') || '[]');
-        messages.push({ text: msg, time: timeStr });
+        messages.push({ text: msg, time: timeStr, reply: "" });
         localStorage.setItem('hizmetbul_mesajlar', JSON.stringify(messages));
+
+        loadChatMessages();
       }
     }
   </script>
