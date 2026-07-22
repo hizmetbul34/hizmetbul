@@ -1,5 +1,5 @@
 
-<!doctype html>
+        <!doctype html>
 <html lang="tr">
 <head>
   <meta charset="utf-8">
@@ -11,10 +11,13 @@
     header { background: #111827; color: white; padding: 18px 6%; display: flex; justify-content: space-between; align-items: center; }
     header a { color: #a5b4fc; text-decoration: none; }
     .hero { padding: 25px 6%; background: white; border-bottom: 1px solid #e5e7eb; }
-    .wrap { padding: 25px 6%; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-top: 15px; }
-    .card { background: white; padding: 15px; border-radius: 10px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); font-weight: bold; font-size: 14px; cursor: pointer; transition: 0.2s; }
-    .card:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    .wrap { padding: 25px 6%; max-width: 900px; margin: auto; }
+    .service-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; display: flex; flex-direction: column; gap: 12px; }
+    .service-info { display: flex; justify-content: space-between; align-items: center; }
+    .service-title { font-size: 18px; font-weight: bold; display: flex; align-items: center; gap: 10px; }
+    .btn-chat { background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; }
+    .image-gallery { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; }
+    .image-gallery img { width: 140px; height: 90px; object-fit: cover; border-radius: 8px; border: 1px solid #e5e7eb; }
     footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
     .chat-btn { position: fixed; bottom: 20px; right: 20px; background-color: #007bff; color: white; padding: 12px 18px; border-radius: 30px; font-size: 16px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 1000; }
     .chat-box { display: none; position: fixed; bottom: 75px; right: 20px; width: 320px; background: white; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); z-index: 1001; overflow: hidden; }
@@ -31,7 +34,7 @@
 <body>
 
   <div class="announcement-bar">
-    📢 <strong>Duyuru:</strong> HizmetBul üzerinden 7/24 kesintisiz destek alabilirsiniz!
+    📢 <strong>Duyuru:</strong> Hizmetleriniz için 7/24 destek alabilirsiniz!
   </div>
 
   <header>
@@ -39,14 +42,13 @@
     <a href="admin.html">Yönetim Paneli</a>
   </header>
 
-  <section class="hero">
-    <h1>İhtiyacın Olan Hizmeti Tek Yerde Bul</h1>
-    <p>Hizmet verenleri kategori ve ilçeye göre bul.</p>
+  <section class="hero" style="text-align: center;">
+    <h1>Hizmetlerimiz</h1>
+    <p>İhtiyacınız olan hizmeti seçip hemen sohbet başlatabilirsiniz.</p>
   </section>
 
-  <main class="wrap">
-    <h2>Hizmet Kategorileri</h2>
-    <div class="grid" id="grid"></div>
+  <main class="wrap" id="serviceList">
+    <!-- Hizmetler dinamik yüklenecek -->
   </main>
 
   <footer>© 2026 HizmetBul</footer>
@@ -59,14 +61,12 @@
       <button onclick="toggleChat()">✕</button>
     </div>
     
-    <!-- Kullanıcı Adı Giriş Ekranı -->
     <div id="chatWelcome" style="padding: 25px; text-align: center;">
       <p style="margin-top:0; font-size: 14px; color: #4b5563;">Sohbet başlatmak için adınızı yazın:</p>
       <input type="text" id="usernameInput" placeholder="Adınız / Kullanıcı Adı" style="width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;">
       <button onclick="startChat()" style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: bold;">Sohbeti Başlat</button>
     </div>
 
-    <!-- Sohbet Alanı -->
     <div id="chatMain" style="display: none;">
       <div class="chat-body" id="chatBody"></div>
       <div class="chat-footer">
@@ -79,18 +79,59 @@
   </div>
 
   <script>
-    const cats = [
-      ["🚗","Oto Çekici & Yol Yardım"],
-      ["🧹","Ev Temizliği"],
-      ["❄️","Klima Servisi"],
-      ["📚","Özel Ders"],
-      ["🛠️","Tadilat"],
-      ["🪦","Mezar Bakım & Temizlik"],
-      ["🏗️","İnşaat Kırım Döküm & Bahçe"]
+    const services = [
+      {
+        name: "Yük nakliye",
+        icon: "🚚",
+        images: [
+          "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=300",
+          "https://images.unsplash.com/photo-1519003722824-194d4455a60c?w=300",
+          "https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=300"
+        ]
+      },
+      {
+        name: "Mezar düzenleme çiçek ekle temizleme",
+        icon: "🪦",
+        images: [
+          "https://images.unsplash.com/photo-1588880331179-bc9b93a8cb5e?w=300",
+          "https://images.unsplash.com/photo-1558904541-efa8c4a6b221?w=300",
+          "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=300"
+        ]
+      },
+      {
+        name: "Bahçe düzenleme",
+        icon: "🌱",
+        images: [
+          "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=300",
+          "https://images.unsplash.com/photo-1557429287-b2e26467fc2b?w=300",
+          "https://images.unsplash.com/photo-1592417817098-8f3d691a4bf5?w=300"
+        ]
+      },
+      {
+        name: "Depo düzenleme",
+        icon: "📦",
+        images: [
+          "https://images.unsplash.com/photo-1553413077-190dd305871c?w=300",
+          "https://images.unsplash.com/photo-1586528116493-a0273252409f?w=300",
+          "https://images.unsplash.com/photo-1587293852726-70cdb56c2866?w=300"
+        ]
+      }
     ];
-    const grid = document.getElementById("grid");
-    cats.forEach(c => {
-      grid.innerHTML += `<div class="card" onclick="openChatForCategory('${c[1]}')"><span style="font-size:24px;">${c[0]}</span><br>${c[1]}</div>`;
+
+    const serviceList = document.getElementById("serviceList");
+    services.forEach(s => {
+      let imgHtml = s.images.map(img => `<img src="${img}" alt="${s.name}">`).join('');
+      serviceList.innerHTML += `
+        <div class="service-card">
+          <div class="service-info">
+            <div class="service-title"><span>${s.icon}</span> ${s.name}</div>
+            <button class="btn-chat" onclick="openChatForService('${s.name}')">Bilgi Al & Sohbet Et</button>
+          </div>
+          <div class="image-gallery">
+            ${imgHtml}
+          </div>
+        </div>
+      `;
     });
 
     let currentUsername = localStorage.getItem('hizmetbul_username') || '';
@@ -127,29 +168,29 @@
       localStorage.setItem('hizmetbul_username', name);
       checkChatState();
 
-      if (window.pendingCategory) {
-        sendInitialMessage(window.pendingCategory);
-        window.pendingCategory = null;
+      if (window.pendingService) {
+        sendInitialMessage(window.pendingService);
+        window.pendingService = null;
       }
     }
 
-    function openChatForCategory(categoryName) {
+    function openChatForService(serviceName) {
       const box = document.getElementById('chatBox');
       box.style.display = 'block';
 
       if (!currentUsername) {
-        window.pendingCategory = categoryName;
+        window.pendingService = serviceName;
         document.getElementById('chatWelcome').style.display = 'block';
         document.getElementById('chatMain').style.display = 'none';
       } else {
         document.getElementById('chatWelcome').style.display = 'none';
         document.getElementById('chatMain').style.display = 'block';
-        sendInitialMessage(categoryName);
+        sendInitialMessage(serviceName);
       }
     }
 
-    function sendInitialMessage(categoryName) {
-      const msg = `Merhaba, ${categoryName} hizmeti hakkında bilgi almak istiyorum.`;
+    function sendInitialMessage(serviceName) {
+      const msg = `Merhaba, "${serviceName}" hizmeti hakkında bilgi almak istiyorum.`;
       saveAndSendMessage(msg, null);
     }
 
